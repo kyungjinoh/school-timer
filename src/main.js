@@ -115,13 +115,20 @@ import './style.css';
     ];
     
     // Check if this is a schoolclicker.com domain with a matching school path
+    // Only redirect if we have a path AND it matches a school path
+    const normalizedPath = pathname.toLowerCase().replace(/\/$/, ''); // Remove trailing slash
+    
     if ((hostname === 'www.schoolclicker.com' || hostname === 'schoolclicker.com') && 
-        pathname && schoolPaths.includes(pathname.toLowerCase())) {
-        // Redirect to main domain - check if we're already on the main domain or need to redirect
-        const targetUrl = hostname === 'www.schoolclicker.com' 
-            ? 'https://schoolclicker.com' 
-            : window.location.origin;
-        window.location.replace(targetUrl);
+        normalizedPath && 
+        normalizedPath !== '/' && 
+        schoolPaths.includes(normalizedPath)) {
+        // If on www subdomain, redirect to non-www; otherwise redirect to root
+        if (hostname === 'www.schoolclicker.com') {
+            window.location.replace('https://schoolclicker.com');
+        } else {
+            // Already on main domain, redirect to root
+            window.location.replace('https://schoolclicker.com');
+        }
     }
 })();
 
