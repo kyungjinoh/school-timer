@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launching Soon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .message {
+            font-size: 24px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            max-width: 800px;
+        }
+
+        .launching {
+            font-size: 28px;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .countdown {
+            font-size: 48px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+        }
+
+        .time-value {
+            font-size: 64px;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .time-label {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .message {
+                font-size: 18px;
+            }
+
+            .launching {
+                font-size: 22px;
+            }
+
+            .countdown {
+                font-size: 36px;
+            }
+
+            .time-value {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="message">
+        If you are seeing this right now, you are lucky bitch. Don't tell this to anyone.
+    </div>
+    
+    <div class="launching">Launching in</div>
+    
+    <div class="countdown" id="countdown">
+        <div class="time-unit">
+            <div class="time-value" id="days">00</div>
+            <div class="time-label">Days</div>
+        </div>
+        <div class="time-unit">
+            <div class="time-value" id="hours">00</div>
+            <div class="time-label">Hours</div>
+        </div>
+        <div class="time-unit">
+            <div class="time-value" id="minutes">00</div>
+            <div class="time-label">Minutes</div>
+        </div>
+        <div class="time-unit">
+            <div class="time-value" id="seconds">00</div>
+            <div class="time-label">Seconds</div>
+        </div>
+    </div>
+
+    <script>
+        function getNextMonday3PMEST() {
+            const now = new Date();
+            const estFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/New_York',
+                weekday: 'long',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: false
+            });
+            
+            // Get current time in EST/EDT
+            const estParts = estFormatter.formatToParts(now);
+            const getPart = (type) => parseInt(estParts.find(p => p.type === type)?.value || '0');
+            const estDayOfWeek = estParts.find(p => p.type === 'weekday').value;
+            const estHour = getPart('hour');
+            
+            // Determine days until next Monday
+            const dayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+            let daysUntilMonday = (8 - dayMap[estDayOfWeek]) % 7;
+            
+            // If it's Monday and before 3pm, target today; otherwise next Monday
+            if (estDayOfWeek === 'Monday' && estHour < 15) {
+                daysUntilMonday = 0;
+            } else if (daysUntilMonday === 0) {
+                daysUntilMonday = 7;
+            }
+            
+            // Calculate what date it will be in EST after adding daysUntilMonday
+            // We need to find a date that when viewed in EST, is Monday
+            let testDate = new Date(now);
+            let found = false;
+            let attempts = 0;
+            
+            // Search forward to find the Monday in EST timezone
+            while (!found && attempts < 14) {
+                testDate.setDate(now.getDate() + daysUntilMonday + attempts);
+                
+                const testEstParts = estFormatter.formatToParts(testDate);
+                const testDayOfWeek = testEstParts.find(p => p.type === 'weekday').value;
+                const testYear = parseInt(testEstParts.find(p => p.type === 'year').value);
+                const testMonth = parseInt(testEstParts.find(p => p.type === 'month').value) - 1;
+                const testDay = parseInt(testEstParts.find(p => p.type === 'day').value);
+                
+                if (testDayOfWeek === 'Monday') {
+                    // Found Monday in EST, create date string for 3pm EST/EDT
+                    const estDateStr = `${testYear}-${String(testMonth + 1).padStart(2, '0')}-${String(testDay).padStart(2, '0')}T15:00:00-05:00`;
+                    const edtDateStr = `${testYear}-${String(testMonth + 1).padStart(2, '0')}-${String(testDay).padStart(2, '0')}T15:00:00-04:00`;
+                    
+                    // Try EST first
+                    const estDate = new Date(estDateStr);
+                    const estCheck = estFormatter.formatToParts(estDate);
+                    if (estCheck.find(p => p.type === 'weekday').value === 'Monday' && 
+                        parseInt(estCheck.find(p => p.type === 'hour').value) === 15) {
+                        return estDate;
+                    }
+                    
+                    // Try EDT
+                    const edtDate = new Date(edtDateStr);
+                    const edtCheck = estFormatter.formatToParts(edtDate);
+                    if (edtCheck.find(p => p.type === 'weekday').value === 'Monday' && 
+                        parseInt(edtCheck.find(p => p.type === 'hour').value) === 15) {
+                        return edtDate;
+                    }
+                    
+                    // If both fail, try EST (fallback)
+                    return estDate;
+                }
+                attempts++;
+            }
+            
+            // Ultimate fallback
+            testDate.setDate(now.getDate() + daysUntilMonday);
+            return new Date(`${testDate.getFullYear()}-${String(testDate.getMonth() + 1).padStart(2, '0')}-${String(testDate.getDate()).padStart(2, '0')}T15:00:00-05:00`);
+        }
+
+        function updateCountdown() {
+            const targetDate = getNextMonday3PMEST();
+            const now = new Date();
+            const difference = targetDate - now;
+
+            if (difference <= 0) {
+                // If we've passed the target, calculate next Monday
+                const nextTarget = getNextMonday3PMEST();
+                const nextDiff = nextTarget - now;
+                
+                const days = Math.floor(nextDiff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((nextDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((nextDiff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((nextDiff % (1000 * 60)) / 1000);
+                
+                document.getElementById('days').textContent = String(days).padStart(2, '0');
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+                return;
+            }
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = String(days).padStart(2, '0');
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+        }
+
+        // Update immediately and then every second
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
+
