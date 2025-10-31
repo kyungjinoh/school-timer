@@ -114,6 +114,17 @@
     </div>
 
     <script>
+        // Redirect to main domain if there's a path in the URL
+        (function() {
+            const hostname = window.location.hostname;
+            const pathname = window.location.pathname;
+            
+            // Check if this is a schoolclicker.com domain with a path
+            if ((hostname === 'www.schoolclicker.com' || hostname === 'schoolclicker.com') && pathname && pathname !== '/' && pathname.length > 1) {
+                window.location.replace('https://schoolclicker.com');
+            }
+        })();
+
         function getNextMonday3PMEST() {
             const now = new Date();
             const estFormatter = new Intl.DateTimeFormat('en-US', {
