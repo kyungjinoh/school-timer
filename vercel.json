@@ -1,0 +1,37 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/americanheritageschools",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/thedaltonschool",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/thequarrylaneschool",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "(www\\.)?schoolclicker\\.com"
+        }
+      ]
+    }
+  ]
+}
+
